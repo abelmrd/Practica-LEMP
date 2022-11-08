@@ -1,27 +1,27 @@
-# Practica lamp en dos capas
-En esta practica separaremos servidor de apache y mysql para dar mayor seguridad y control sobre nuestro entorno de trabajo.
+# Practica lemp en dos capas con balanceador
+En esta practica separaremos servidor de nginx, mysql y balanceador para dar mayor seguridad y control sobre nuestro entorno de trabajo, poder administrar mejor los picos de trabajo dirigiendo la carga a cualquiera de los dos servidores nginx que tendran replicado el sitio que implementaremos.
 
 ## Primer paso: Vagrant
 Generamos un archivo vagrant con vagrant init
 Vamos a explicar las lineas que modificamos o añadimos según las necesidades del proyecto
 
 
-    config.vm.define "serverapache" do |serverapache|
+    config.vm.define "servernginx" do |servernginx|
 
-    serverapache.vm.box = "debian/bullseye64"
+    servernginx.vm.box = "debian/bullseye64"
 
-    serverapache.vm.hostname = "AbelMonApache"
+    servernginx.vm.hostname = "AbelMonNginx"
 
-    serverapache.vm.network "public_network"
+    servernginx.vm.network "public_network"
 
-    serverapache.vm.network "private_network", ip: "192.168.21.21"
+    servernginx.vm.network "private_network", ip: "192.168.21.21"
 
-    serverapache.vm.synced_folder "./","/vagrant"
+    servernginx.vm.synced_folder "./","/vagrant"
 
-    serverapache.vm.provision "shell", path: "scripta.sh"
+    servernginx.vm.provision "shell", path: "scripte.sh"
 
 
-* Vamos a definir el servidor como "serverapache". 
+* Vamos a definir el servidor como "servernginx". 
 
 * Utilizaremos una debian bullseye.
 * Le asignamos el nombre al servidor que nos requiere la practica. 
@@ -31,7 +31,7 @@ Para dar un entorno listo para comenzar a configurar aprovisionaremos con dos sc
 
 
 ## Scripts de aprovisionamiento
-### Script script apache
+### Script nginx
 
 ```
 echo " Actualizamos repositorios y paquetes"
@@ -39,13 +39,12 @@ echo " Actualizamos repositorios y paquetes"
     sudo apt update 
     sudo apt upgrade -y
 
-echo "Instalacion de paquetes LAMP. Apache"
-    sudo apt -y install apache2 
-    sudo systemctl reload apache2
+echo "Instalacion de paquetes lemp. Nginx , mysql y php"
+    sudo apt -y install nginx 
+    sudo systemctl reload nginx
     sudo apt -y install default-mysql-client
-
-echo " Instalacion de php"
-    sudo apt -y install php libapache2-mod-php php-mysql
+    sudo apt -y install php-mysql
+    sudo apt -y install php-fpm
 
     #sudo apt -y install phpmyadmin php-mbstring php-zip php-gd php-json php-curl
     #instalamos adminer y lo movemos al directorio www
@@ -57,12 +56,12 @@ sudo apt -y install git
 ```
 
 * En este script vamos a actualizar repositorios y paquetes con update y upgrade.
-* Instalaremos apache mostrando algunos mensajes al usuario.
+* Instalaremos nginx mostrando algunos mensajes al usuario.
 * Instalamos tambien mysql para conectarnos al servidor
-* Una vez instalado el codigo sigue instalando PHP
-* En este caso no instalamos phpmyadmin, por eso comentamos con#. No conseguimos que funcione, y nos paraliza la instalacion.
-* Para subsanarlo instalamos adminer que ademas es más ligero y sencillo de implementar. Una vez descargado buscamos su ubicación y la movemos al directorio /www, para tenerlo localizado facilmente a la hora de moverlo al directorio final de nuestra aplicación.
-* El último paso es instalar git para cualquier necesidad de actualizar nuestro proyecto.
+* Una vez instalado sigue instalando PHP
+* En este caso no instalamos phpmyadmin, por eso comentamos con#.
+* Instalamos adminer que ademas es más ligero y sencillo de implementar. Una vez descargado buscamos su ubicación y la movemos al directorio /www, para tenerlo localizado facilmente a la hora de moverlo al directorio final de nuestra aplicación.
+* El último paso es instalar git para actualizar nuestro proyecto.
 
 ### Script servidor Mysql
 
@@ -75,13 +74,11 @@ echo " Actualizamos paquetes"
 echo "Instalacion de mysql"
     sudo apt -y install default-mysql-server
     
+echo "Modificar password de root"
 
-# Definimos variables para la creacion de usuario mysql
-        usuariodb="abel"
-        passdb="11111111"
-############################
-
-echo "Crear usuario para MYSQL y modificar password de root"
+sudo mysql -u root <<EOF
+alter user 'root'@'localhost' identified by '1234'
+EOF
 
 #creamos el usuario que definimos en variable para el cliente .21.21
 sudo mysql -u root -e "CREATE USER '$usuariodb'@'192.168.21.21' IDENTIFIED BY '$passdb';"
@@ -98,15 +95,14 @@ Comentaremos brevemente, ya que todas las lineas del script estan comentadas.
 
 * Actualización de paquetes y repositorios
 * Instalamos la version de mysql actual, que previamente buscamos con apt search
-* Vamos a crear unas variables para definir usuario y contraseña del usuario administrador, que podriamos darle mayor utilidad en otro contexto.
-* Creamos el usuario, con la contraseña que generamos y le damos todos los permisos en todo el servidor.
-* Cambiamos la contraseña de root, y recargamos la configuración.
+* Una vez modificada la password de root en el aprovisionamiento  Creamos el usuario, con la contraseña que generamos y le damos todos los permisos en todo el servidor.
+
 
 ## Conectividad entre máquinas
 
 Una vez comprobado que se instala todo sin problemas, vamos a realizar un ping entre ambos equipos.
 ``` Ping 192.168.21.22 ```
-Al ejecutar desde apache (192.168.21.21) nos da respuesta.
+Al ejecutar desde nginx (192.168.21.21) nos da respuesta.
 
 Para mostrarle al servidor Mysql cual es la ip donde tiene que permitir conexiones buscaremos el archivo "50-server.cnf" para cambiar este parametro por la ip del servidor mysql. 
 La ruta sera la siguiente:
@@ -116,7 +112,7 @@ La ruta sera la siguiente:
 El parametro a modificar por la ip de nuestro servidor
 ```bind-address            = 192.168.21.22```
 
-Una vez hecho, comprobamos que podemos conectarnos con el usuario creado desde apache.
+Una vez hecho, comprobamos que podemos conectarnos al servidor mysql con el usuario creado, desde el servidor nginx.
 ```
 mysql -u abel -p -h 192.168.21.22
 ```
@@ -127,22 +123,27 @@ Todo correcto, es hora de implementar nuestra aplicación.
 Clonamos con git clone desde el repositorio proporcionado.
 ```git clone https://github.com/josejuansanchez/iaw-practica-lamp.git```
 #### Pasos para la aplicación
-1. Descargamos los archivos en a ruta compartida con vagrant.
+1. Descargamos los archivos con git, los alojaremos en el home.
 2. Movemos los archivos de la aplicacíon a una nueva carpeta creada en /www/var/.
-En nuestra prática sera /www/var/app.
+En nuestra práctica será /www/var/app.
 3. Movemos el adminer.php a esta misma ruta.
-4. Una vez que tenemos todos los archivos, modificamos el archivo 000-default situado en sites-enabled para decirle que la ruta nueva sera /www/var/app y no /html.
-5. Modificamos el dueño de los archivos para darselos a apache estando en la ruta de los archivos. ```sudo chown www-data.www-data *```
+4. Una vez que tenemos todos los archivos, copiamos el archivo 000-default situado en sites-available, lo modificamos para decirle que la ruta nueva sera /www/var/app y no /html.
+5. Modificamos el dueño de los archivos para darselos a nginx estando en la ruta de los archivos. ```sudo chown -r www-data.www-data *```
 6. Configuramos el archivo config.php para indicarle los parametros de nuestro usuario y base de datos que tiene que utilizar en la ejecución de la aplicación.
-7. Reiniciamos apache
-```sudo systemctl restart apache```
+7. Reiniciamos nginx
+```sudo systemctl restart nginx```
 
 #### Configuración de la base de datos
-1. En primer lugar modificaremos el archivo database.sql para adecuarlo al usuario y contraseña que generamos para nuestro cliente. 
-2. Una vez modificado entramos en el gestor con ```mysql -u abel -p -h 192.168.21.22```
-3. Le decimos la ruta de donde tiene que importar la base de datos
-```source /vagrant/db/database.sql```
-4. Comprobamos que podemos hacer consultas, y que nos arroja los datos que previamente insertamos desde un navegador web.
+1. Nos conectamos al servidor MYSQL con root y la contraseña que definimos en el aprovisionamiento. Una vez dentro creamos un usuario para dar acceso a nginx.
+```CREATE USER 'abel'@'192.168.21.21' IDENTIFIED BY '11111111';```
+2. Le damos todos los privilegios al usuario y actualizamos privilegios
+```GRANT ALL PRIVILEGES ON *.* TO 'abel'@'192.168.21.21'`;```
+```FLUSH PRIVILEGES;```
+3. Una vez creado el usuario, modificaremos el archivo database.sql para adecuarlo al usuario y contraseña que generamos para nuestro cliente. 
+4. Entramos en el servidor mysql desde nginx con ```mysql -u abel -p -h 192.168.21.22```
+5. Le decimos la ruta de donde tiene que importar la base de datos
+```source /home/vagrant/db/database.sql```
+6. Comprobamos que podemos hacer consultas, y que nos arroja los datos que previamente insertamos desde un navegador web.
 
 
 ### Capturas de interconexión de máquinas
