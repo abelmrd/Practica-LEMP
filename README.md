@@ -80,12 +80,8 @@ sudo mysql -u root <<EOF
 alter user 'root'@'localhost' identified by '1234'
 EOF
 
-#creamos el usuario que definimos en variable para el cliente .21.21
-sudo mysql -u root -e "CREATE USER '$usuariodb'@'192.168.21.21' IDENTIFIED BY '$passdb';"
-# damos todos los privilegios al usuario desde la ip del cliente
-sudo mysql -u root -e "GRANT ALL PRIVILEGES ON *.* TO '$usuariodb'@'192.168.21.21';"
-# modificamos root del servidor para ponerle la pass 1234
-sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '1234';"
+El usuario lo crearemos mas tarde entrando con root, dandole acceso a los dos servidores nginx por su ip.
+
 # Actualizamos privilegios
 sudo mysql -u root -e "FLUSH PRIVILEGES;"
 # Finalmente recargamos el servidor mysql para que adopte la nueva configuración
@@ -102,17 +98,17 @@ Comentaremos brevemente, ya que todas las lineas del script estan comentadas.
 
 Una vez comprobado que se instala todo sin problemas, vamos a realizar un ping entre ambos equipos.
 ``` Ping 192.168.21.22 ```
-Al ejecutar desde nginx (192.168.21.21) nos da respuesta.
+Al ejecutar desde nginx y desde nginx2 (192.168.21.21-30) nos da respuesta.
 
 Para mostrarle al servidor Mysql cual es la ip donde tiene que permitir conexiones buscaremos el archivo "50-server.cnf" para cambiar este parametro por la ip del servidor mysql. 
 La ruta sera la siguiente:
 ```
 /etc/mysql/mariadb.conf.d/50-server.cnf
 ```
-El parametro a modificar por la ip de nuestro servidor
+El parametro a modificar por la ip de nuestro servidor mysql/mariaDb
 ```bind-address            = 192.168.21.22```
 
-Una vez hecho, comprobamos que podemos conectarnos al servidor mysql con el usuario creado, desde el servidor nginx.
+Una vez hecho, comprobamos que podemos conectarnos al servidor mysql con el usuario creado, desde el servidor nginx y desde el servidor replicado nginx2.
 ```
 mysql -u abel -p -h 192.168.21.22
 ```
@@ -127,10 +123,20 @@ Clonamos con git clone desde el repositorio proporcionado.
 2. Movemos los archivos de la aplicacíon a una nueva carpeta creada en /www/var/.
 En nuestra práctica será /www/var/app.
 3. Movemos el adminer.php a esta misma ruta.
-4. Una vez que tenemos todos los archivos, copiamos el archivo 000-default situado en sites-available, lo modificamos para decirle que la ruta nueva sera /www/var/app y no /html.
-5. Modificamos el dueño de los archivos para darselos a nginx estando en la ruta de los archivos. ```sudo chown -r www-data.www-data *```
-6. Configuramos el archivo config.php para indicarle los parametros de nuestro usuario y base de datos que tiene que utilizar en la ejecución de la aplicación.
-7. Reiniciamos nginx
+4. Una vez que tenemos todos los archivos, copiamos el archivo 000-default situado en sites-available, lo modificamos para decirle que la ruta nueva sera /www/var/apli y no /html.
+5. Tenemos que descomentar las lineas de php para que nos admita estos archivos.
+ En nuestro caso utilizaremos un socket local para la interconexion entre nginx y php, ya que estara en la misma máquina. Hay que comprobar que la version que tenemos es la 7.4, ya que podría variar.
+```location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        }```
+6. Tambien vamos añadir el index.php a la lista de index que permite nginx.
+La pondremos la primera para darle prioridad y que nos muestre el .php si existe.
+```# Add index.php to the list if you are using PHP
+        index index.php index.html index.htm index.nginx-debian.html;```
+7. Modificamos el dueño de los archivos para darselos a nginx estando en la ruta de los archivos. ```sudo chown -r www-data.www-data *```
+8. Configuramos el archivo config.php para indicarle los parametros de nuestro usuario y base de datos que tiene que utilizar en la ejecución de la aplicación.
+9. Reiniciamos nginx
 ```sudo systemctl restart nginx```
 
 #### Configuración de la base de datos
@@ -153,3 +159,16 @@ En nuestra práctica será /www/var/app.
 
 ![](imagenes/apache.PNG)
 ![](imagenes/mysql.PNG)
+
+
+ location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+        #
+        #       # With php-fpm (or other unix sockets):
+                fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        #       # With php-cgi (or other tcp sockets):
+        #       fastcgi_pass 127.0.0.1:9000;
+        }
+
+        # Add index.php to the list if you are using PHP
+        index index.php index.html index.htm index.nginx-debian.html;
