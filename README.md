@@ -172,3 +172,34 @@ La pondremos la primera para darle prioridad y que nos muestre el .php si existe
 
         # Add index.php to the list if you are using PHP
         index index.php index.html index.htm index.nginx-debian.html;
+
+
+
+        
+upstream backend {
+
+ server 192.168.21.21;
+ server 192.168.21.30;
+}
+
+server {
+
+        listen 80;
+
+        location / {
+        proxy_pass http://backend;
+        }
+}
+
+
+ upstream backend {
+        server 192.168.10.10;
+        server 192.168.10.11;
+        #server 192.0.0.1 backup;
+    }
+
+    server {
+        location / {
+            proxy_pass http://backend;
+        }
+    }
