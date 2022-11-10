@@ -157,7 +157,7 @@ La pondremos la primera para darle prioridad y que nos muestre el .php si existe
 #### Podemos ver el nombre de las diferentes maquinas y como ambas se pueden conectar, una desde remoto con el usuario abel y otra desde root en local.
 
 
-![Conexion nginx con mysql]([capturas/conexiongnginxmysql.PNG](https://github.com/abelmrd/Practica-LEMP/blob/main/capturas/conexiongnginxmysql.PNG))
+![](https://github.com/abelmrd/Practica-LEMP/blob/main/capturas/conexiongnginxmysql.PNG))
 ![](capturas/conexionnginx2.PNG)
 
 
