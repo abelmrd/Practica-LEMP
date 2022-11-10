@@ -160,7 +160,7 @@ La pondremos la primera para darle prioridad y que nos muestre el index.php si e
 ![](imagenes/ngin.PNG))
 ![](imagenes/nginx.PNG)
 
-
+``
 ##Creación de balanceador de carga
 
 La configuracion del servidor que actuara como balanceador, sera nuestro frontal, por tanto el unico servidor visible de cara al usuario final. Para acceder a nuestros sitios web de nginx lo haran a través de esta ip.
@@ -182,7 +182,7 @@ server {
 }
 
 
-    ```
+
 Lo podemos resumir como el archivo donde indicamos que servidores son los que tienen el sitio web, y por tanto debe balancear.
 Ponemos las dos lineas de nuestros dos servidores. Le ponemos de nombre backed, por tanto el proxy pass sera el mismo.
 En este caso no definimos el orden que el balanceador tendra a la hora de dirigir las peticiones del servidor.
