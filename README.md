@@ -160,7 +160,7 @@ La pondremos la primera para darle prioridad y que nos muestre el index.php si e
 ![](imagenes/ngin.PNG))
 ![](imagenes/nginx.PNG)
 
-#### Creación de balanceador de carga
+## Creación de balanceador de carga
 
 La configuración del servidor que actuara como balanceador, sera nuestro frontal, por tanto el único servidor visible de cara al usuario final. Para acceder a nuestros sitios web de nginx lo harán a través de esta ip.
 La configuración es sencilla, solo debemos configurar el archivo default de sites-available e implementar las siguientes lineas, o bien borrarlo y crear uno nuevo con este contenido:
