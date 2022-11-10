@@ -151,7 +151,7 @@ La pondremos la primera para darle prioridad y que nos muestre el .php si existe
 ```source /home/vagrant/db/database.sql```
 6. Comprobamos que podemos hacer consultas, y que nos arroja los datos que previamente insertamos desde un navegador web.
 
-
+``````
 ### Capturas de interconexión de máquinas
 
 #### Podemos ver el nombre de las diferentes maquinas y como ambas se pueden conectar, una desde remoto con el usuario abel y otra desde root en local.
