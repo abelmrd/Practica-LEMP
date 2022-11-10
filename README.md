@@ -180,7 +180,7 @@ server {
         }
 }
 
-
+### Contenido del archivo y algoritmo 
 
 Lo podemos resumir como el archivo donde indicamos que servidores son los que tienen el sitio web, y por tanto debe balancear.
 Ponemos las dos lineas de nuestros dos servidores. Le ponemos de nombre backend, por tanto el proxy pass sera el mismo.
