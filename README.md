@@ -179,6 +179,7 @@ server {
         proxy_pass http://backend;
         }
 }
+```
 
 ### Contenido del archivo y algoritmo 
 
