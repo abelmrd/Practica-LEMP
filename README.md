@@ -157,7 +157,7 @@ La pondremos la primera para darle prioridad y que nos muestre el index.php si e
 #### Podemos ver el nombre de las diferentes máquinas y como ambas se pueden conectar con el usuario abel desde los diferentes servidores nginx.
 
 
-![](imagenes/ngin.PNG))
+![](imagenes/ngin.PNG)
 ![](imagenes/nginx.PNG)
 
 ## Creación de balanceador de carga
@@ -188,3 +188,6 @@ Ponemos las dos líneas de nuestros dos servidores. Le ponemos de nombre backend
 En este caso no definimos el orden que el balanceador tendrá a la hora de dirigir las peticiones del servidor.
 Por defecto utilizara el algoritmo round robin, que alternativamente va enviando cada petición a uno diferente de forma equitativa.
 En esta práctica he cambiado el contenido de la aplicación, añadiendo un "1" y un "2" en el texto "DEMO APP" en los distintos servidores, por lo que a la hora de actualizar podemos ver como aplica esta regla y cada vez nos muestra un servidor diferente sin tener en cuenta la cantidad de peticiones, saturación o cualquier otro algoritmo.
+
+Te adjunto la configuración de red del balanceador, donde vemos que la ip 192.168.1.148 es a la que accedemos en el video.
+![](imagenes/ip.PNG)
