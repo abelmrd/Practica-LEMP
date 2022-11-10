@@ -121,28 +121,28 @@ Clonamos con git clone desde el repositorio proporcionado.
 #### Pasos para la aplicación
 1. Descargamos los archivos con git, los alojaremos en el home.
 2. Movemos los archivos de la aplicacíon a una nueva carpeta creada en /www/var/.
-En nuestra práctica será /www/var/app.
+En nuestra práctica será /www/var/apli.
 3. Movemos el adminer.php a esta misma ruta.
-4. Una vez que tenemos todos los archivos, copiamos el archivo 000-default situado en sites-available, lo modificamos para decirle que la ruta nueva sera /www/var/apli y no /html.
+4. Una vez que tenemos todos los archivos, podemos copiar o editar el archivo default situado en sites-available o en sites-enabled ya que son el mismo archivo, lo modificamos para decirle que la ruta nueva sera /www/var/apli y no /html, ya que al no tener mas sitios no tenemos necesidad de crear otro nuevo y crear el enlace.
 5. Tenemos que descomentar las lineas de php para que nos admita estos archivos.
- En nuestro caso utilizaremos un socket local para la interconexion entre nginx y php, ya que estara en la misma máquina. Hay que comprobar que la version que tenemos es la 7.4, ya que podría variar.
+ En nuestro caso utilizaremos un socket local para la interconexion entre nginx y php, ya que estara en la misma máquina y mas rapido que el TCP/IP. Hay que comprobar que la version que tenemos es la 7.4, ya que podría variar.
 ```location ~ \.php$ {
                 include snippets/fastcgi-php.conf;
                 fastcgi_pass unix:/run/php/php7.4-fpm.sock;
         }```
 6. Tambien vamos añadir el index.php a la lista de index que permite nginx.
-La pondremos la primera para darle prioridad y que nos muestre el .php si existe.
+La pondremos la primera para darle prioridad y que nos muestre el index.php si existe.
 ```# Add index.php to the list if you are using PHP
         index index.php index.html index.htm index.nginx-debian.html;```
-7. Modificamos el dueño de los archivos para darselos a nginx estando en la ruta de los archivos. ```sudo chown -r www-data.www-data *```
-8. Configuramos el archivo config.php para indicarle los parametros de nuestro usuario y base de datos que tiene que utilizar en la ejecución de la aplicación.
+7. Modificamos el dueño de los archivos para darselos a nginx estando en la ruta de los archivos. ```sudo chown -R www-data.www-data *```
+8. Configuramos el archivo config.php para indicarle los parametros de nuestro usuario y base de datos que tiene que utilizar en la ejecución de la aplicación. Los definimos como abel y 11111111.
 9. Reiniciamos nginx
 ```sudo systemctl restart nginx```
 
 #### Configuración de la base de datos
-1. Nos conectamos al servidor MYSQL con root y la contraseña que definimos en el aprovisionamiento. Una vez dentro creamos un usuario para dar acceso a nginx.
+1. Nos conectamos al servidor MYSQL con root y la contraseña que definimos en el aprovisionamiento. Una vez dentro creamos un usuario para dar acceso a nginx. En este caso habria que hacerlo para los dos servidores nginx, por tanto las dos ips .21 y .30. Aunque sea el mismo usuario, debemos darle acceso desde ambas ips.
 ```CREATE USER 'abel'@'192.168.21.21' IDENTIFIED BY '11111111';```
-2. Le damos todos los privilegios al usuario y actualizamos privilegios
+2. Le damos todos los privilegios al usuario y actualizamos privilegios .
 ```GRANT ALL PRIVILEGES ON *.* TO 'abel'@'192.168.21.21'`;```
 ```FLUSH PRIVILEGES;```
 3. Una vez creado el usuario, modificaremos el archivo database.sql para adecuarlo al usuario y contraseña que generamos para nuestro cliente. 
@@ -154,37 +154,27 @@ La pondremos la primera para darle prioridad y que nos muestre el .php si existe
 ``````
 ### Capturas de interconexión de máquinas
 
-#### Podemos ver el nombre de las diferentes maquinas y como ambas se pueden conectar, una desde remoto con el usuario abel y otra desde root en local.
+#### Podemos ver el nombre de las diferentes maquinas y como ambas se pueden conectar con el usuario abel desde los diferentes servidores nginx.
 
 
 ![](imagenes/ngin.PNG))
 ![](imagenes/nginx.PNG)
 
 
- location ~ \.php$ {
-                include snippets/fastcgi-php.conf;
-        #
-        #       # With php-fpm (or other unix sockets):
-                fastcgi_pass unix:/run/php/php7.4-fpm.sock;
-        #       # With php-cgi (or other tcp sockets):
-        #       fastcgi_pass 127.0.0.1:9000;
-        }
+##Creación de balanceador de carga
 
-        # Add index.php to the list if you are using PHP
-        index index.php index.html index.htm index.nginx-debian.html;
+La configuracion del servidor que actuara como balanceador, sera nuestro frontal, por tanto el unico servidor visible de cara al usuario final. Para acceder a nuestros sitios web de nginx lo haran a través de esta ip.
+La configuracion es sencilla, solo debemos configurar el archivo default de sites-available e implementar las siguientes lineas, o bien borrarlo y crear uno nuevo con este contenido:
 
-
-
-        
+```      
 upstream backend {
 
- server 192.168.21.21;
- server 192.168.21.30;
+ server 192.168.10.10;
+ server 192.168.10.11;
 }
 
 server {
 
-        listen 80;
 
         location / {
         proxy_pass http://backend;
@@ -192,14 +182,9 @@ server {
 }
 
 
- upstream backend {
-        server 192.168.10.10;
-        server 192.168.10.11;
-        #server 192.0.0.1 backup;
-    }
-
-    server {
-        location / {
-            proxy_pass http://backend;
-        }
-    }
+    ```
+Lo podemos resumir como el archivo donde indicamos que servidores son los que tienen el sitio web, y por tanto debe balancear.
+Ponemos las dos lineas de nuestros dos servidores. Le ponemos de nombre backed, por tanto el proxy pass sera el mismo.
+En este caso no definimos el orden que el balanceador tendra a la hora de dirigir las peticiones del servidor.
+Por defecto utilizara el algoritmo round robin, que alternativamente va enviando cada peticion a uno diferente de forma equitativa.
+En esta práctica he cambiado el contenido de la aplicacion, añadiendo un "1" y un "2" en el texto "DEMO APP" en los distintos servidores, por lo que a la hora de actualizar podemos ver como aplica esta regla y cada vez nos muestra un servidor diferente sin tener en cuenta la cantidad de peticiones, saturacion o cualquier otro algoritmo.
