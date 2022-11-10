@@ -181,9 +181,9 @@ server {
 }
 
 ```
-
+#### Contenido del archivo y algoritmo round robin
 Lo podemos resumir como el archivo donde indicamos que servidores son los que alojan el sitio web, y por tanto debe balancear.
-Ponemos las dos lineas de nuestros dos servidores. Le ponemos de nombre backed, por tanto el proxy pass sera el mismo.
+Ponemos las dos lineas de nuestros dos servidores. Le ponemos de nombre backend, por tanto el proxy pass sera el mismo.
 En este caso no definimos el orden que el balanceador tendra a la hora de dirigir las peticiones del servidor.
 Por defecto utilizara el algoritmo round robin, que alternativamente va enviando cada peticion a uno diferente de forma equitativa.
 En esta práctica he cambiado el contenido de la aplicacion, añadiendo un "1" y un "2" en el texto "DEMO APP" en los distintos servidores, por lo que a la hora de actualizar podemos ver como aplica esta regla y cada vez nos muestra un servidor diferente sin tener en cuenta la cantidad de peticiones, saturacion o cualquier otro algoritmo.
