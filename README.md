@@ -126,14 +126,18 @@ En nuestra práctica será /www/var/apli.
 4. Una vez que tenemos todos los archivos, podemos copiar o editar el archivo default situado en sites-available o en sites-enabled ya que son el mismo archivo, lo modificamos para decirle que la ruta nueva será /www/var/apli y no /html, ya que al no tener más sitios no tenemos necesidad de crear otro nuevo y crear el enlace.
 5. Tenemos que des comentar las líneas de php para que nos admita estos archivos.
  En nuestro caso utilizaremos un socket local para la interconexión entre nginx y php, ya que estará en la misma máquina y más rápido que el TCP/IP. Hay que comprobar que la versión que tenemos es la 7.4, ya que podría variar.
-```location ~ \.php$ {
+```
+location ~ \.php$ {
                 include snippets/fastcgi-php.conf;
                 fastcgi_pass unix:/run/php/php7.4-fpm.sock;
-        }```
+        }
+```
 6. También vamos añadir el index.php a la lista de index que permite nginx.
 La pondremos la primera para darle prioridad y que nos muestre el index.php si existe.
-```# Add index.php to the list if you are using PHP
-        index index.php index.html index.htm index.nginx-debian.html;```
+```
+# Add index.php to the list if you are using PHP
+        index index.php index.html index.htm index.nginx-debian.html;
+```
 7. Modificamos el dueño de los archivos para dárselos a nginx estando en la ruta de los archivos. ```sudo chown -R www-data.www-data *```
 8. Configuramos el archivo config.php para indicarle los parámetros de nuestro usuario y base de datos que tiene que utilizar en la ejecución de la aplicación. Los definimos como abel y 11111111.
 9. Reiniciamos nginx
@@ -151,7 +155,7 @@ La pondremos la primera para darle prioridad y que nos muestre el index.php si e
 ```source /home/vagrant/db/database.sql```
 6. Comprobamos que podemos hacer consultas, y que nos arroja los datos que previamente insertamos desde un navegador web.
 
-``````
+
 ### Capturas de interconexión de máquinas
 
 #### Podemos ver el nombre de las diferentes máquinas y como ambas se pueden conectar con el usuario abel desde los diferentes servidores nginx.
